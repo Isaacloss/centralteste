@@ -3,13 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PluviTech Central</title>
-    
+    <title>PluviTech Central V5</title>
     <link rel="stylesheet" href="style.css">
-    
-    <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#0d0d0d">
-
     <script src="https://unpkg.com/dexie/dist/dexie.js"></script>
 </head>
 <body>
@@ -17,7 +12,7 @@
     <div class="container">
         <header>
             <h1>PLUVITECH <span class="version">V5-BLE</span></h1>
-            <p>Ponte Bluetooth & LoRa</p>
+            <p>Controle com Feedback Real</p>
         </header>
 
         <section class="control-card">
@@ -25,10 +20,11 @@
                 CONECTAR BLUETOOTH
             </button>
             <div id="status">Status: Desconectado</div>
-            
-            <hr style="border: 0; border-top: 1px solid #333; margin-bottom: 20px;">
 
-            <h2>Comandos de Campo</h2>
+            <div id="indicador-status" class="status-box">
+                AGUARDANDO CONEXÃO
+            </div>
+
             <div class="button-group">
                 <button class="btn btn-on" onclick="executarAcao('BOMBA_01', 'LIGAR')">LIGAR</button>
                 <button class="btn btn-off" onclick="executarAcao('BOMBA_01', 'DESLIGAR')">DESLIGAR</button>
@@ -36,13 +32,9 @@
         </section>
 
         <section class="log-section">
-            <h3>Histórico Local (SQL)</h3>
-            <div id="lista-logs" class="log-container">
-                <p class="empty-msg">Nenhum registro no banco de dados.</p>
-            </div>
-            <button onclick="limparHistorico()" style="background:none; border:none; color:#555; font-size:10px; cursor:pointer; margin-top:10px;">
-                LIMPAR HISTÓRICO LOCAL
-            </button>
+            <h3>Histórico de Comandos</h3>
+            <div id="lista-logs" class="log-container"></div>
+            <button onclick="limparHistorico()" class="btn-clear">LIMPAR HISTÓRICO</button>
         </section>
     </div>
 
