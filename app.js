@@ -9,22 +9,26 @@ const ESP_IP = "http://192.168.4.1";
 
 // 3. Função Principal de Comando
 function executarAcao(disp, acao) {
-   // const url = `http://192.168.4.1/comando?id=${disp}&val=${acao}`;
-    const url = `${ESP_IP}/comando?id=${disp}&val=${acao}&t=${Math.random()}`;
+    // Adicionamos um número aleatório (t) para o navegador não cachear
+    const url = `http://192.168.4.1/comando?id=${disp}&val=${acao}&t=${Date.now()}`;
     
-    // Registra no SQL primeiro
+    console.log("Disparando comando...");
+
+    // MÉTODO DA IMAGEM: O navegador dispara a requisição sem checar se tem internet
+    // É o jeito mais estável para redes locais sem gateway de saída
+    const img = new Image();
+    
+    img.onload = () => console.log("Comando entregue!");
+    img.onerror = () => console.log("Comando enviado (ignorado erro de resposta)");
+    
+    img.src = url; 
+
+    // Salva no SQL normalmente
     db.historico.add({
         dispositivo: disp,
         acao: acao,
         data: new Date().toLocaleString()
     }).then(() => atualizarInterface());
-
-    // O truque: Criamos uma "Image" invisível para disparar o link.
-    // Isso ignora erros de CORS e de resposta do navegador.
-    const img = new Image();
-    img.src = url; 
-    
-    console.log("Comando disparado!");
 }
 
 // 4. Função para atualizar a lista na tela (Lendo do SQL)
