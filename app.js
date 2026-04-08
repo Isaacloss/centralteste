@@ -9,7 +9,8 @@ const ESP_IP = "http://192.168.4.1";
 
 // 3. Função Principal de Comando
 function executarAcao(disp, acao) {
-    const url = `http://192.168.4.1/comando?id=${disp}&val=${acao}`;
+   // const url = `http://192.168.4.1/comando?id=${disp}&val=${acao}`;
+    const url = `${ESP_IP}/comando?id=${disp}&val=${acao}&t=${Math.random()}`;
     
     // Registra no SQL primeiro
     db.historico.add({
