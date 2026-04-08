@@ -4,13 +4,14 @@
     --text-primary: #e0e0e0;
     --accent-green: #2ecc71;
     --accent-red: #e74c3c;
+    --accent-blue: #3498db;
     --border-color: #333;
 }
 
 body {
     background-color: var(--bg-color);
     color: var(--text-primary);
-    font-family: 'Segoe UI', Roboto, sans-serif;
+    font-family: 'Segoe UI', Roboto, Arial, sans-serif;
     margin: 0;
     padding: 20px;
     display: flex;
@@ -24,37 +25,63 @@ body {
 
 header {
     text-align: center;
-    margin-bottom: 30px;
+    margin-bottom: 25px;
 }
 
 header h1 {
     margin: 0;
     color: var(--accent-green);
     letter-spacing: 2px;
+    font-size: 1.8rem;
 }
 
 .version {
-    font-size: 0.5em;
-    vertical-align: middle;
+    font-size: 0.4em;
     background: #333;
-    padding: 2px 8px;
+    padding: 3px 8px;
     border-radius: 4px;
+    vertical-align: middle;
 }
 
+/* Card de Controle */
 .control-card {
     background: var(--card-bg);
     border: 1px solid var(--border-color);
     padding: 20px;
-    border-radius: 12px;
-    box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
 }
 
 .control-card h2 {
-    margin-top: 0;
-    font-size: 1.2rem;
+    font-size: 1rem;
     text-align: center;
+    color: #888;
+    text-transform: uppercase;
 }
 
+/* Botão Bluetooth */
+.btn-ble {
+    background-color: var(--accent-blue);
+    color: white;
+    width: 100%;
+    padding: 18px;
+    border: none;
+    border-radius: 10px;
+    font-weight: bold;
+    font-size: 1rem;
+    cursor: pointer;
+    margin-bottom: 10px;
+    transition: background 0.3s;
+}
+
+#status {
+    text-align: center;
+    font-size: 0.8rem;
+    margin-bottom: 20px;
+    color: #aaa;
+}
+
+/* Grupo de Botões Ligar/Desligar */
 .button-group {
     display: flex;
     gap: 15px;
@@ -62,11 +89,11 @@ header h1 {
 
 .btn {
     flex: 1;
-    padding: 20px;
+    padding: 30px 10px;
     border: none;
-    border-radius: 8px;
+    border-radius: 10px;
     font-weight: bold;
-    font-size: 1rem;
+    font-size: 1.2rem;
     cursor: pointer;
     transition: transform 0.1s;
 }
@@ -78,30 +105,37 @@ header h1 {
 .btn-on { background-color: var(--accent-green); color: #000; }
 .btn-off { background-color: var(--accent-red); color: #fff; }
 
+/* Seção de Logs */
 .log-section {
-    margin-top: 40px;
+    margin-top: 30px;
+}
+
+.log-section h3 {
+    font-size: 0.9rem;
+    color: #666;
 }
 
 .log-container {
     background: #050505;
     border: 1px solid var(--border-color);
-    height: 250px;
+    height: 180px;
     overflow-y: auto;
-    border-radius: 8px;
+    border-radius: 10px;
     padding: 10px;
+}
+
+.log-item {
+    padding: 10px 0;
+    border-bottom: 1px solid #222;
     font-family: 'Courier New', monospace;
     font-size: 0.85rem;
 }
 
-.log-item {
-    padding: 8px 0;
-    border-bottom: 1px solid #222;
-    animation: fadeIn 0.3s ease-in;
-}
+.log-item small { color: #666; }
 
-.empty-msg { color: #555; text-align: center; }
-
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(-5px); }
-    to { opacity: 1; transform: translateY(0); }
+.empty-msg {
+    color: #444;
+    text-align: center;
+    margin-top: 70px;
+    font-size: 0.9rem;
 }
