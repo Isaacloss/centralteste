@@ -14,14 +14,24 @@ function executarAcao(disp, acao) {
     
     console.log("Disparando comando...");
 
-    // MÉTODO DA IMAGEM: O navegador dispara a requisição sem checar se tem internet
-    // É o jeito mais estável para redes locais sem gateway de saída
-    const img = new Image();
-    
-    img.onload = () => console.log("Comando entregue!");
-    img.onerror = () => console.log("Comando enviado (ignorado erro de resposta)");
-    
-    img.src = url; 
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000);
+
+    fetch(url, {
+        method: 'GET',
+        mode: 'no-cors',
+        signal: controller.signal
+    })
+    .then(response => {
+        clearTimeout(timeoutId);
+        console.log("Comando entregue!");
+    })
+    .catch(error => {
+        clearTimeout(timeoutId);
+      
+        console.log("Comando reenviado ao ESP32");
+    });
 
     // Salva no SQL normalmente
     db.historico.add({
