@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PluviTech Central</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://unpkg.com/dexie/dist/dexie.js"></script>
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <h1>PLUVITECH <span class="version">V3</span></h1>
+            <p>Central de Comando LoRa</p>
+        </header>
+
+        <section class="control-card">
+            <h2>Bomba de Irrigação</h2>
+            <div class="button-group">
+                <button class="btn btn-on" onclick="executarAcao('BOMBA_01', 'LIGAR')">LIGAR</button>
+                <button class="btn btn-off" onclick="executarAcao('BOMBA_01', 'DESLIGAR')">DESLIGAR</button>
+            </div>
+        </section>
+
+        <section class="log-section">
+            <h3>Histórico de Comandos (SQL)</h3>
+            <div id="lista-logs" class="log-container">
+                <p class="empty-msg">Nenhum comando enviado ainda.</p>
+            </div>
+        </section>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
