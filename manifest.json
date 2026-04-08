@@ -1,0 +1,15 @@
+{
+  "name": "PluviTech Central",
+  "short_name": "PluviTech",
+  "start_url": "index.html",
+  "display": "standalone",
+  "background_color": "#0d0d0d",
+  "theme_color": "#2ecc71",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/2108/2108625.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

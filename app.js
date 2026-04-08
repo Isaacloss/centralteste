@@ -1,5 +1,5 @@
 /**
- * PLUVITECH V8 - ALTA DISPONIBILIDADE & AUTO-RECONNECT
+ * PLUVITECH V9 - PWA EDITION (AUTO-RECONNECT)
  */
 const db = new Dexie("PluviTech_Database");
 db.version(1).stores({ historico: '++id, dispositivo, acao, data' });
@@ -10,41 +10,35 @@ const CHARACTERISTIC_UUID = "beb5483e-36e1-4688-b7f5-ea07361b26a8";
 let dispositivoBLE = null;
 let caracteristicaBLE = null;
 
-// 1. Tenta reconectar ao carregar a página
+// Tenta reconectar assim que o PWA abre
 window.onload = async () => {
     atualizarInterface();
-    tentarResgatarDispositivo();
+    verificarPareamentoPrevio();
 };
 
-// 2. Tenta pegar o dispositivo que já foi pareado uma vez
-async function tentarResgatarDispositivo() {
+// No PWA, o navegador permite checar dispositivos já autorizados
+async function verificarPareamentoPrevio() {
     if (navigator.bluetooth && navigator.bluetooth.getDevices) {
         try {
             const devices = await navigator.bluetooth.getDevices();
-            dispositivoBLE = devices.find(d => d.name === 'PluviTech_BLE');
-            
-            if (dispositivoBLE) {
-                console.log("Hardware reconhecido encontrado. Tentando link automático...");
-                await configurarServico(dispositivoBLE);
+            const jaPareado = devices.find(d => d.name === 'PluviTech_BLE');
+            if (jaPareado) {
+                console.log("Hardware conhecido encontrado. Conectando...");
+                await configurarServico(jaPareado);
             }
-        } catch (err) {
-            console.log("Aguardando interação para reconectar...");
-        }
+        } catch (e) { console.log("Aguardando ação do usuário."); }
     }
 }
 
-// 3. Função de conexão (Manual ou Automática)
 async function conectarBluetooth() {
-    const statusTxt = document.getElementById('status');
-    
     try {
-        // Se já conhecemos o hardware, não abre a lista, apenas conecta
+        // Se já temos o objeto (mesmo desconectado), tenta ligar o GATT
         if (dispositivoBLE) {
             await configurarServico(dispositivoBLE);
             return;
         }
 
-        // Se é a primeira vez, pede permissão (Obrigatório pelo Android)
+        // Abre a lista (Apenas na primeira vez no PWA)
         dispositivoBLE = await navigator.bluetooth.requestDevice({
             filters: [{ name: 'PluviTech_BLE' }],
             optionalServices: [SERVICE_UUID]
@@ -54,8 +48,7 @@ async function conectarBluetooth() {
         await configurarServico(dispositivoBLE);
 
     } catch (error) {
-        console.error(error);
-        alert("Certifique-se que o Bluetooth e GPS estão ativos.");
+        alert("Ative GPS e Bluetooth.");
     }
 }
 
@@ -64,66 +57,55 @@ async function configurarServico(device) {
     const indicador = document.getElementById('indicador-status');
 
     try {
-        if (!device.gatt.connected) {
-            await device.gatt.connect();
-        }
+        statusTxt.innerText = "Status: Conectando...";
+        if (!device.gatt.connected) await device.gatt.connect();
         
-        const server = device.gatt;
-        const service = await server.getPrimaryService(SERVICE_UUID);
+        const service = await device.gatt.getPrimaryService(SERVICE_UUID);
         caracteristicaBLE = await service.getCharacteristic(CHARACTERISTIC_UUID);
         
         await caracteristicaBLE.startNotifications();
-        caracteristicaBLE.addEventListener('characteristicvaluechanged', tratarFeedback);
+        caracteristicaBLE.addEventListener('characteristicvaluechanged', (e) => {
+            const val = new TextDecoder().decode(e.target.value);
+            if (val === "CONFIRM_ON") {
+                indicador.style.backgroundColor = "#2ecc71";
+                indicador.innerText = "VÁLVULA ABERTA (OK)";
+            } else if (val === "CONFIRM_OFF") {
+                indicador.style.backgroundColor = "#e74c3c";
+                indicador.innerText = "VÁLVULA FECHADA (OK)";
+            }
+        });
 
-        statusTxt.innerText = "Status: Online (Conectado)";
+        statusTxt.innerText = "Status: Online (PWA)";
         statusTxt.style.color = "#2ecc71";
         indicador.innerText = "SISTEMA PRONTO";
         indicador.style.backgroundColor = "#333";
+        dispositivoBLE = device; // Salva na memória global
+
     } catch (err) {
-        console.error("Falha ao subir serviço:", err);
-        // Tenta de novo em 3 segundos
-        setTimeout(() => configurarServico(device), 3000);
+        console.error(err);
+        setTimeout(() => configurarServico(device), 5000);
     }
 }
 
-// 4. Lógica de "App de Lâmpada": Não desiste nunca
 function onDisconnected() {
-    const statusTxt = document.getElementById('status');
-    statusTxt.innerText = "Status: Hardware Offline. Buscando...";
-    statusTxt.style.color = "#e67e22";
-
-    // Tenta reconectar automaticamente sem intervenção humana
-    setTimeout(() => {
-        if (dispositivoBLE) {
-            console.log("Reconectando automaticamente...");
-            configurarServico(dispositivoBLE);
-        }
-    }, 5000);
-}
-
-function tratarFeedback(event) {
-    const value = new TextDecoder().decode(event.target.value);
-    const indicador = document.getElementById('indicador-status');
-    if (value === "CONFIRM_ON") {
-        indicador.style.backgroundColor = "#2ecc71";
-        indicador.innerText = "VÁLVULA ABERTA (OK)";
-    } else if (value === "CONFIRM_OFF") {
-        indicador.style.backgroundColor = "#e74c3c";
-        indicador.innerText = "VÁLVULA FECHADA (OK)";
-    }
+    document.getElementById('status').innerText = "Status: Offline. Reconectando...";
+    document.getElementById('status').style.color = "orange";
+    setTimeout(() => { if (dispositivoBLE) configurarServico(dispositivoBLE); }, 5000);
 }
 
 async function executarAcao(disp, acao) {
     if (!caracteristicaBLE) {
-        // Se clicou e estava desconectado, tenta o reconectar rápido
-        conectarBluetooth();
+        conectarBluetooth(); // Tenta conectar se clicar e estiver off
         return;
     }
     try {
-        await caracteristicaBLE.writeValue(new TextEncoder().encode(`${disp}:${acao}`));
+        const encoder = new TextEncoder();
+        await caracteristicaBLE.writeValue(encoder.encode(`${disp}:${acao}`))
+            .catch(() => console.log("Enviado"));
+        
         await db.historico.add({ dispositivo: disp, acao: acao, data: new Date().toLocaleString() });
         atualizarInterface();
-    } catch (e) { console.log("Erro no envio"); }
+    } catch (e) { console.error(e); }
 }
 
 async function atualizarInterface() {
@@ -135,4 +117,4 @@ async function atualizarInterface() {
     `).join('');
 }
 
-async function limparHistorico() { if(confirm("Limpar registros?")) { await db.historico.clear(); atualizarInterface(); } }
+async function limparHistorico() { if(confirm("Limpar?")) { await db.historico.clear(); atualizarInterface(); } }
