@@ -1,22 +1,24 @@
-// 1. Configuração do Banco de Dados SQL (Dexie)
-const db = new Dexie("PluviTech_Database");
-db.version(1).stores({
-    historico: '++id, dispositivo, acao, data'
-});
-
-// 2. Endereço IP do ESP32 (Ponte)
+// Endereço IP do ESP32 (Ponte)  
 const ESP_IP = "http://192.168.4.1";
 
-// 3. Função Principal de Comando
+// Função Principal de Comando
 function executarAcao(disp, acao) {
+    console.log("=== INICIANDO COMANDO ===");
+    console.log(`[1] Dispositivo: ${disp}`);
+    console.log(`[2] Ação: ${acao}`);
+    console.log(`[3] Timestamp: ${Date.now()}`);
+    
     // Adicionamos um número aleatório (t) para o navegador não cachear
     const url = `http://192.168.4.1/comando?id=${disp}&val=${acao}&t=${Date.now()}`;
+    console.log(`[4] URL Completa: ${url}`);
     
-    console.log("Disparando comando...");
-
+    console.log(`[5] Enviando requisição com fetch (no-cors)...`);
 
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 5000);
+    const timeoutId = setTimeout(() => {
+        console.log(`[TIMEOUT] Requisição demorou mais de 5 segundos!`);
+        controller.abort();
+    }, 5000);
 
     fetch(url, {
         method: 'GET',
@@ -25,36 +27,23 @@ function executarAcao(disp, acao) {
     })
     .then(response => {
         clearTimeout(timeoutId);
-        console.log("Comando entregue!");
+        console.log(`[6] RESPOSTA RECEBIDA`);
+        console.log(`[7] Status: ${response.status}`);
+        console.log(`[8] Status Text: ${response.statusText}`);
+        console.log(`[9] Type: ${response.type}`);
+        console.log(`✓ Comando entregue com sucesso!`);
     })
     .catch(error => {
         clearTimeout(timeoutId);
-      
-        console.log("Comando reenviado ao ESP32");
+        console.error(`[ERRO] Falha na requisição:`);
+        console.error(`[ERROR] Nome: ${error.name}`);
+        console.error(`[ERROR] Mensagem: ${error.message}`);
+        console.error(`[ERROR] Stack:`, error.stack);
+        
+        if (error.name === 'AbortError') {
+            console.log(`→ Abortado (timeout ou cancelamento manual)`);
+        } else {
+            console.log(`→ Erro de rede/CORS`);
+        }
     });
-
-    // Salva no SQL normalmente
-    db.historico.add({
-        dispositivo: disp,
-        acao: acao,
-        data: new Date().toLocaleString()
-    }).then(() => atualizarInterface());
 }
-
-// 4. Função para atualizar a lista na tela (Lendo do SQL)
-async function atualizarInterface() {
-    const lista = document.getElementById('lista-logs');
-    if (!lista) return;
-
-    // Busca os últimos 10 registros no banco SQL
-    const logs = await db.historico.orderBy('id').reverse().limit(10).toArray();
-    
-    lista.innerHTML = logs.map(log => `
-        <div class="log-item">
-            <small>${log.data}</small> | <b>${log.dispositivo}</b>: ${log.acao}
-        </div>
-    `).join('');
-}
-
-// Inicializa a tela ao abrir o app
-atualizarInterface();
