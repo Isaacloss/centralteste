@@ -8,33 +8,22 @@ db.version(1).stores({
 const ESP_IP = "http://192.168.4.1";
 
 // 3. Função Principal de Comando
-async function executarAcao(disp, acao) {
-    console.log(`Tentando: ${disp} -> ${acao}`);
+function executarAcao(disp, acao) {
+    const url = `http://192.168.4.1/comando?id=${disp}&val=${acao}`;
     
-    // Montamos a URL exatamente como testamos no navegador
-    const urlConstruida = `${ESP_IP}/comando?id=${disp}&val=${acao}`;
+    // Registra no SQL primeiro
+    db.historico.add({
+        dispositivo: disp,
+        acao: acao,
+        data: new Date().toLocaleString()
+    }).then(() => atualizarInterface());
 
-    try {
-        // O segredo está aqui: o fetch envia o comando e segue em frente
-        // Usamos 'no-cors' para o navegador não travar a requisição por segurança
-        fetch(urlConstruida, { 
-            mode: 'no-cors',
-            cache: 'no-cache' 
-        });
-
-        // Salva no SQL interno do celular (persistência)
-        await db.historico.add({
-            dispositivo: disp,
-            acao: acao,
-            data: new Date().toLocaleString()
-        });
-
-        console.log("Comando processado localmente e enviado ao ESP32.");
-        atualizarInterface();
-
-    } catch (error) {
-        console.error("Erro na comunicação:", error);
-    }
+    // O truque: Criamos uma "Image" invisível para disparar o link.
+    // Isso ignora erros de CORS e de resposta do navegador.
+    const img = new Image();
+    img.src = url; 
+    
+    console.log("Comando disparado!");
 }
 
 // 4. Função para atualizar a lista na tela (Lendo do SQL)
